@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VPC01:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/21
+      Tags:
+      - Key: Name
+        Value: VPC01
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: VPC01-IGW
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC01
+      InternetGatewayId: !Ref InternetGateway
+  RouteTable01:
+    Type: AWS::EC2::RouteTable
+    DependsOn: AttachGateway
+    Properties:
+      VpcId: !Ref VPC01
+      Tags:
+      - Key: Name
+        Value: VPC01rt
+  FrontendRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref RouteTable01
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: 'true'
+      VpcId: !Ref VPC01
+      Tags:
+      - Key: Name
+        Value: PublicSubnet-VPC01
+  FrontendSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref RouteTable01
